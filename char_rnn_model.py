@@ -104,7 +104,7 @@ class CharRNN(object):
     with tf.name_scope('slice_inputs'):
       # Slice inputs into a list of shape [batch_size, 1] data colums.
       sliced_inputs = [tf.squeeze(input_, [1])
-                       for input_ in tf.split(1, self.num_unrollings, inputs)]
+                       for input_ in tf.split(axis=1, num_or_size_splits=self.num_unrollings, value=inputs)]
       
     # Copy cell to do unrolling and collect outputs.
     outputs, final_state = tf.nn.rnn(multi_cell, sliced_inputs,
@@ -113,11 +113,11 @@ class CharRNN(object):
 
     with tf.name_scope('flatten_ouputs'):
       # Flatten the outputs into one dimension.
-      flat_outputs = tf.reshape(tf.concat(1, outputs), [-1, hidden_size])
+      flat_outputs = tf.reshape(tf.concat(axis=1, values=outputs), [-1, hidden_size])
 
     with tf.name_scope('flatten_targets'):
       # Flatten the targets too.
-      flat_targets = tf.reshape(tf.concat(1, self.targets), [-1])
+      flat_targets = tf.reshape(tf.concat(axis=1, values=self.targets), [-1])
     
     # Create softmax parameters, weights and bias.
     with tf.variable_scope('softmax') as sm_vs:
@@ -128,7 +128,7 @@ class CharRNN(object):
 
     with tf.name_scope('loss'):
       # Compute mean cross entropy loss for each output.
-      loss = tf.nn.sparse_softmax_cross_entropy_with_logits(self.logits, flat_targets)
+      loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits, labels=flat_targets)
       self.mean_loss = tf.reduce_mean(loss)
 
     with tf.name_scope('loss_monitor'):
@@ -152,11 +152,11 @@ class CharRNN(object):
       loss_summary_name = "average loss"
       ppl_summary_name = "perplexity"
   
-      average_loss_summary = tf.scalar_summary(loss_summary_name, self.average_loss)
-      ppl_summary = tf.scalar_summary(ppl_summary_name, self.ppl)
+      average_loss_summary = tf.summary.scalar(loss_summary_name, self.average_loss)
+      ppl_summary = tf.summary.scalar(ppl_summary_name, self.ppl)
 
     # Monitor the loss.
-    self.summaries = tf.merge_summary([average_loss_summary, ppl_summary],
+    self.summaries = tf.summary.merge([average_loss_summary, ppl_summary],
                                       name='loss_monitor')
     
     self.global_step = tf.get_variable('global_step', [],

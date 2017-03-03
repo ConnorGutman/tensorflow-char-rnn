@@ -267,14 +267,14 @@ def main():
             else:
                 graph_info = session.graph_def
 
-            train_writer = tf.train.SummaryWriter(args.tb_log_dir + 'train/', graph_info)
-            valid_writer = tf.train.SummaryWriter(args.tb_log_dir + 'valid/', graph_info)
+            train_writer = tf.summary.FileWriter(args.tb_log_dir + 'train/', graph_info)
+            valid_writer = tf.summary.FileWriter(args.tb_log_dir + 'valid/', graph_info)
 
             # load a saved model or start from random initialization.
             if args.init_model:
                 saver.restore(session, args.init_model)
             else:
-                tf.initialize_all_variables().run()
+                tf.global_variables_initializer().run()
             for i in range(args.num_epochs):
                 logging.info('=' * 19 + ' Epoch %d ' + '=' * 19 + '\n', i)
                 logging.info('Training on training set')
